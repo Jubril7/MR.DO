@@ -5,11 +5,12 @@ import {
   CheckSquare,
   Menu,
   Settings,
+  Bot
 } from "lucide-react";
 import CatLogo from "../assets/002.png";
 import { askGemini } from "../components/gemini";
 import TodoPage from "../components/Todolist";
-import CompletedList from "../components/Completed";
+import CompletedList from "../components/completed";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -17,6 +18,10 @@ export default function Sidebar() {
   const [showAI, setShowAI] = useState(false);
   const [showTodo, setShowTodo] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+
+  const [previewTasks, setPreviewTasks] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+
 
   // Shared tasks
   const [tasks, setTasks] = useState([]);
@@ -28,18 +33,46 @@ export default function Sidebar() {
 
   const handleAIActivate = () => setShowAI(!showAI);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    setLoading(true);
-    try {
-      const reply = await askGemini(input);
-      setResponse(reply);
-    } catch (err) {
-      setResponse("⚠️ Something went wrong.");
-    } finally {
-      setLoading(false);
+const handleSend = async () => {
+  if (!input.trim()) return;
+  setLoading(true);
+  try {
+    const reply = await askGemini(input);
+
+    if (reply.tasks && Array.isArray(reply.tasks)) {
+      const normalized = reply.tasks.map((t) => {
+        const capitalize = (str) =>
+          str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+        return {
+          id: Date.now() + Math.random(),
+          text: capitalize(t.task),
+          completed: false,
+          priority: t.priority || "low",
+          dueDate: t.date || "",
+        };
+      });
+
+      // add new tasks to top of list
+      // setTasks((prev) => [...normalized, ...prev]);
+
+                // Save tasks into preview instead of committing
+      setPreviewTasks(normalized);
+      setShowModal(true);
     }
-  };
+
+    setResponse("✅ Thank you for Organizing with MR.DO!");
+    setInput(""); 
+  } catch (err) {
+    console.error(err);
+    setResponse(" Something went wrong.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
 
   return (
     <div className="flex gap-4">
@@ -66,15 +99,6 @@ export default function Sidebar() {
                 MENU
               </span>
             </div>
-
-            <img
-              src={CatLogo}
-              alt="AI Logo"
-              className={`w-8 h-8 cursor-pointer hover:scale-110 transition-all duration-300 ${
-                isOpen ? "opacity-100 scale-100" : "opacity-0 scale-0"
-              }`}
-              onClick={handleAIActivate}
-            />
           </div>
 
           {/* Menu items */}
@@ -136,16 +160,16 @@ export default function Sidebar() {
             </h3>
             <div className="flex flex-col gap-2 mt-2">
               <button className="bg-gray-200 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition">
-                Previous To-Do List 1
+                To-Do List 1
               </button>
               <button className="bg-gray-200 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition">
-                Previous To-Do List 2
+                To-Do List 2
               </button>
               <button className="bg-gray-200 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition">
-                Previous To-Do List 3
+                To-Do List 3
               </button>
               <button className="bg-gray-200 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition">
-                Previous To-Do List 4
+                To-Do List 4
               </button>
             </div>
           </div>
@@ -181,6 +205,7 @@ export default function Sidebar() {
               </button>
             </div>
             <TodoPage tasks={tasks} setTasks={setTasks} />
+            
           </div>
         </div>
       )}
@@ -214,17 +239,23 @@ export default function Sidebar() {
             {response ? (
               <p className="text-gray-700 whitespace-pre-wrap">{response}</p>
             ) : (
-              <p className="text-gray-500">I’m Mr.Do,let me help you organize your Tasks …</p>
+              <p className="text-gray-500">I’m MR.DO, Let me help you organize your Tasks...</p>
             )}
           </div>
 
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Add task..."
+              placeholder="Organize with MR.DO"
               className="border rounded-lg p-2 w-full focus:outline-none"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSend();
+                }
+              }}
             />
             <button
               onClick={handleSend}
@@ -236,6 +267,71 @@ export default function Sidebar() {
           </div>
         </div>
       )}
+      {/* Preview Modal */}
+{showModal && (
+    <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl shadow-xl p-6 w-[400px]">
+      <h2 className="text-lg font-bold mb-4 text-gray-800">
+        Preview Tasks
+      </h2>
+
+      <ul className="space-y-3 max-h-60 overflow-y-auto">
+        {previewTasks.map((task, idx) => (
+          <li
+            key={idx}
+            className="flex justify-between items-center p-3 border rounded-lg bg-gray-50"
+          >
+            <span className="font-medium">{task.text}</span>
+            <div className="flex gap-2 text-xs">
+              <span
+                className={`px-2 py-1 rounded-full ${
+                  task.priority === "high"
+                    ? "bg-red-100 text-red-600"
+                    : task.priority === "medium"
+                    ? "bg-yellow-100 text-yellow-600"
+                    : "bg-green-100 text-green-600"
+                }`}
+              >
+                {task.priority}
+              </span>
+              {task.dueDate && (
+                <span className="text-gray-500">{task.dueDate}</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowModal(false)}
+          className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            setTasks((prev) => [...previewTasks, ...prev]); // commit to main list
+            setPreviewTasks([]);
+            setShowModal(false);
+          }}
+          className="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600"
+        >
+          Use
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      {/* Floating Action Button (FAB) */}
+      <button
+        onClick={handleAIActivate}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-orange-500 shadow-xl flex items-center justify-center text-white hover:bg-orange-600 transition transform hover:scale-110 hover:animate-bounce hover:shadow-2xl z-50 cursor-pointer"
+      >
+        <Bot size={28} />
+      </button>
     </div>
   );
 }

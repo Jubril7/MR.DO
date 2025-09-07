@@ -77,7 +77,7 @@ export default function TodoPage({ tasks, setTasks }) {
           <input
             className="flex-grow p-3 rounded-l-lg border border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
             type="text"
-            placeholder="..."
+            placeholder="Add New Task..."
             value={taskText}
             onChange={(e) => setTaskText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addTask()}
@@ -115,7 +115,7 @@ export default function TodoPage({ tasks, setTasks }) {
       <ul className="w-full max-w-md space-y-4">
         {sortedTasks.length === 0 && (
           <li className="text-gray-500 text-center">
-            No tasks yet. Organize with Mr Do!
+            No tasks yet...
           </li>
         )}
 
