@@ -6,7 +6,7 @@ const apiKey = "AIzaSyC0ZpzK0O4VuhzWO-noM3_XKMpw0BDLzCM";
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function askGemini(userPrompt) {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
   const today = new Date().toISOString().split("T")[0];
 
   const systemInstruction = `

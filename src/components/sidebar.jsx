@@ -7,7 +7,6 @@ import {
   Settings,
   Bot
 } from "lucide-react";
-import CatLogo from "../assets/002.png";
 import { askGemini } from "../components/gemini";
 import TodoPage from "../components/Todolist";
 import CompletedList from "../components/completed";
@@ -52,11 +51,6 @@ const handleSend = async () => {
           dueDate: t.date || "",
         };
       });
-
-      // add new tasks to top of list
-      // setTasks((prev) => [...normalized, ...prev]);
-
-                // Save tasks into preview instead of committing
       setPreviewTasks(normalized);
       setShowModal(true);
     }
@@ -233,7 +227,7 @@ const handleSend = async () => {
       {/* AI Drawer */}
       {showAI && (
         <div className="fixed right-4 top-20 w-96 h-[80vh] bg-white border border-gray-300 rounded-2xl shadow-lg p-4 flex flex-col transition-all duration-300 z-40">
-          <h2 className="font-bold text-lg mb-2">Hello there! 👋</h2>
+          <h2 className="font-bold text-lg mb-2">Hi there! 👋</h2>
 
           <div className="flex-1 overflow-y-auto border p-2 rounded-lg mb-3">
             {response ? (
